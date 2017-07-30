@@ -19,14 +19,19 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 		titleFont = new Font("Arial", Font.PLAIN, 48);
 		startFont = new Font("Arial", Font.PLAIN, 20);
 		instructionsFont = new Font("Arial", Font.PLAIN, 20);
+		gameOverFont = new Font("Arial", Font.PLAIN, 48);
+		scoreFont = new Font("Arial", Font.PLAIN, 20);
+		ship = new Rocketship(250, 700, 50, 50);
+		manager = new ObjectManager(); 
+		manager.addObject(ship);
 
 	}
 
 	Timer timer;
 	GameObject game;
-	Font titleFont; 
-	Font startFont;
-	Font instructionsFont;
+	Font titleFont, startFont, instructionsFont, gameOverFont, scoreFont; 
+	Rocketship ship;
+	ObjectManager manager; 
 
 	final int MENU_STATE = 0;
 	final int GAME_STATE = 1;
@@ -38,11 +43,19 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 	}
 
 	void updateGameState() {
-
+		manager.update();
+		manager.manageEnemies();
+		manager.checkCollision();
+		if (ship.isAlive == false) {
+			currentState = END_STATE;
+			manager.reset();
+			ship = new Rocketship(250, 700, 50, 50);
+			manager.addObject(ship);
+		}
 	}
 
 	void updateEndState() {
-
+		
 	}
 
 	void drawMenuState(Graphics g) {
@@ -60,11 +73,18 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 	void drawGameState(Graphics g) {
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, LeagueInvaders.WIDTH, LeagueInvaders.HEIGHT);
+		manager.draw(g);
 	}
 
 	void drawEndState(Graphics g) {
-		g.setColor(Color.RED);
+		g.setColor(Color.DARK_GRAY);
 		g.fillRect(0, 0, LeagueInvaders.WIDTH, LeagueInvaders.HEIGHT);
+		g.setFont(gameOverFont);
+		g.setColor(Color.BLUE);
+		g.drawString("GAME OVER", 100, 200);
+		g.setFont(scoreFont);
+		g.setColor(Color.BLUE);
+		g.drawString("Score: " + manager.getScore(), 225, 400);
 	}
 
 	@Override
@@ -103,7 +123,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 	@Override
 	public void keyTyped(KeyEvent e) {
 		// TODO Auto-generated method stub
-		System.out.println("Message1");
 	}
 
 	@Override
@@ -116,13 +135,28 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 		if (currentState > END_STATE) {
 			currentState = MENU_STATE;
 		}
+		
+		if (e.getKeyCode() == KeyEvent.VK_UP) {
+			ship.y -= ship.speed;
+		}
+		if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+			ship.y += ship.speed;
+		}
+		if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+			ship.x += ship.speed;
+		}
+		if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+			ship.x -= ship.speed;
+		}
+		if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+			manager.addObject(new Projectile(ship.x + 20, ship.y, 10, 10));;
+		}
 
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
 		// TODO Auto-generated method stub
-		System.out.println("Message3");
 
 	}
 
