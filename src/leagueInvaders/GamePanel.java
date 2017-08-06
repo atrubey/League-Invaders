@@ -7,7 +7,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -19,19 +22,32 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 		titleFont = new Font("Arial", Font.PLAIN, 48);
 		startFont = new Font("Arial", Font.PLAIN, 20);
 		instructionsFont = new Font("Arial", Font.PLAIN, 20);
-		gameOverFont = new Font("Arial", Font.PLAIN, 48);
+		gameOverFont = new Font("Arial", Font.BOLD, 48);
 		scoreFont = new Font("Arial", Font.PLAIN, 20);
 		ship = new Rocketship(250, 700, 50, 50);
-		manager = new ObjectManager(); 
+		manager = new ObjectManager();
 		manager.addObject(ship);
+
+		try {
+			alienImg = ImageIO.read(this.getClass().getResourceAsStream("alien.png"));
+			rocketImg = ImageIO.read(this.getClass().getResourceAsStream("rocket.png"));
+			bulletImg = ImageIO.read(this.getClass().getResourceAsStream("bullet.png"));
+			menuBkgndImg = ImageIO.read(this.getClass().getResourceAsStream("spacebackground1.png"));
+			endBkgndImg = ImageIO.read(this.getClass().getResourceAsStream("spacebackground2.png"));
+
+		} catch (IOException e) {
+			// TODO: handle exceptions
+			e.printStackTrace();
+		}
 
 	}
 
 	Timer timer;
 	GameObject game;
-	Font titleFont, startFont, instructionsFont, gameOverFont, scoreFont; 
+	Font titleFont, startFont, instructionsFont, gameOverFont, scoreFont;
 	Rocketship ship;
-	ObjectManager manager; 
+	ObjectManager manager;
+	public static BufferedImage alienImg, rocketImg, bulletImg, menuBkgndImg, endBkgndImg;
 
 	final int MENU_STATE = 0;
 	final int GAME_STATE = 1;
@@ -39,7 +55,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 	int currentState = MENU_STATE;
 
 	void updateMenuState() {
-
+		manager.setScore(0);
 	}
 
 	void updateGameState() {
@@ -55,19 +71,23 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 	}
 
 	void updateEndState() {
-		
+
 	}
 
 	void drawMenuState(Graphics g) {
-		g.setColor(Color.CYAN);
-		g.fillRect(0, 0, LeagueInvaders.WIDTH, LeagueInvaders.HEIGHT);
+		g.drawImage(GamePanel.menuBkgndImg, 0, 0, LeagueInvaders.WIDTH, LeagueInvaders.HEIGHT, null);
 		g.setFont(titleFont);
-		g.setColor(Color.DARK_GRAY);
+		g.setColor(Color.LIGHT_GRAY);
 		g.drawString("LEAGUE INVADERS", 20, 200);
 		g.setFont(startFont);
-		g.setColor(Color.BLUE);
+		g.setColor(Color.LIGHT_GRAY);
 		g.drawString("Press enter to start", 150, 300);
-		g.drawString("Press space for instructions", 120, 400);
+		g.drawString("Instructions:", 185, 400);
+		g.drawString("Use the ARROW KEYS to control your ship", 50, 450);
+		g.drawString("Press the SPACE BAR to shoot projectiles", 50, 475);
+		g.drawString("Shoot aliens to gain points", 125, 525);
+		g.drawString("If an alien touches your ship, you lose", 75, 500);
+
 	}
 
 	void drawGameState(Graphics g) {
@@ -77,14 +97,16 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 	}
 
 	void drawEndState(Graphics g) {
-		g.setColor(Color.DARK_GRAY);
-		g.fillRect(0, 0, LeagueInvaders.WIDTH, LeagueInvaders.HEIGHT);
+		g.drawImage(GamePanel.endBkgndImg, 0, 0, LeagueInvaders.WIDTH, LeagueInvaders.HEIGHT, null);
 		g.setFont(gameOverFont);
-		g.setColor(Color.BLUE);
+		g.setColor(Color.BLACK);
 		g.drawString("GAME OVER", 100, 200);
 		g.setFont(scoreFont);
-		g.setColor(Color.BLUE);
+		g.setColor(Color.BLACK);
 		g.drawString("Score: " + manager.getScore(), 225, 400);
+		g.setFont(scoreFont);
+		g.setColor(Color.BLACK);
+		g.drawString("Press enter to try again", 150, 500);
 	}
 
 	@Override
@@ -96,6 +118,9 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 			updateGameState();
 		} else if (currentState == END_STATE) {
 			updateEndState();
+			manager.reset();
+			ship = new Rocketship(250, 700, 50, 50);
+			manager.addObject(ship);
 		}
 
 		repaint();
@@ -135,7 +160,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 		if (currentState > END_STATE) {
 			currentState = MENU_STATE;
 		}
-		
+
 		if (e.getKeyCode() == KeyEvent.VK_UP) {
 			ship.y -= ship.speed;
 		}
@@ -148,8 +173,11 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 		if (e.getKeyCode() == KeyEvent.VK_LEFT) {
 			ship.x -= ship.speed;
 		}
-		if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-			manager.addObject(new Projectile(ship.x + 20, ship.y, 10, 10));;
+		if (e.getKeyCode() == KeyEvent.VK_SPACE && currentState == GAME_STATE) {
+			manager.addObject(new Projectile(ship.x + 20, ship.y, 10, 10));
+		}
+		if (e.getKeyCode() == KeyEvent.VK_SPACE && currentState == MENU_STATE) {
+			
 		}
 
 	}
